@@ -111,23 +111,98 @@ class _SchedIQAppState extends State<SchedIQApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: AppConstants.appName,
-      theme: AppTheme.buildLightTheme(),
-      darkTheme: AppTheme.buildDarkTheme(),
-      themeMode: ThemeMode.system,
-      home: !_initialized
-          ? const Scaffold(body: Center(child: CircularProgressIndicator()))
-          : _showOnboarding
-              ? OnboardingScreen(onComplete: _onOnboardingComplete)
-              : Builder(
-                  builder: (context) {
-                    // Load data when the app shell is first built
-                    Future.microtask(() => _loadData());
-                    return const AppShell();
-                  },
-                ),
+    return Consumer<SettingsProvider>(
+      builder: (context, settings, child) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: AppConstants.appName,
+          theme: AppTheme.buildLightTheme(),
+          darkTheme: AppTheme.buildDarkTheme(),
+          themeMode: settings.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+          home: !_initialized
+              ? const Scaffold(body: Center(child: CircularProgressIndicator()))
+              : _showOnboarding
+                  ? OnboardingScreen(onComplete: _onOnboardingComplete)
+                  : Builder(
+                      builder: (context) {
+                        Future.microtask(() {
+                          _loadData();
+                          _check45DayReset(context);
+                        });
+                        return const AppShell();
+                      },
+                    ),
+        );
+      },
     );
+  }
+
+  void _check45DayReset(BuildContext context) async {
+    final settings = Provider.of<SettingsProvider>(context, listen: false);
+    final createdStr = settings.timetableCreatedAt;
+    
+    if (createdStr.isEmpty) {
+      await settings.setTimetableCreatedAt(DateTime.now().toIso8601String());
+      return;
+    }
+
+    final createdAt = DateTime.tryParse(createdStr);
+    if (createdAt == null) return;
+
+    final daysPassed = DateTime.now().difference(createdAt).inDays;
+    if (daysPassed >= 45) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (c) => AlertDialog(
+          title: const Text('New Semester?'),
+          content: const Text('It has been 45 days since you created this timetable. Would you like to clear all classes and attendance to start fresh for a new semester?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(c);
+                // Ask when to remind again
+                showDialog(
+                  context: context,
+                  builder: (c2) => AlertDialog(
+                    title: const Text('Remind Me Later'),
+                    content: const Text('When should we remind you again?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () async {
+                          // Remind in 7 days
+                          await settings.setTimetableCreatedAt(DateTime.now().add(const Duration(days: 7 - 45)).toIso8601String());
+                          if (context.mounted) Navigator.pop(c2);
+                        },
+                        child: const Text('In 7 Days'),
+                      ),
+                      TextButton(
+                        onPressed: () async {
+                          // Ignore entirely (reset to now so it waits 45 days again)
+                          await settings.setTimetableCreatedAt(DateTime.now().toIso8601String());
+                          if (context.mounted) Navigator.pop(c2);
+                        },
+                        child: const Text('Do Not Remind'),
+                      ),
+                    ],
+                  ),
+                );
+              },
+              child: const Text('Not Now'),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: Colors.red),
+              onPressed: () async {
+                final appProvider = Provider.of<AppProvider>(context, listen: false);
+                await appProvider.deleteAllData();
+                await settings.setTimetableCreatedAt(DateTime.now().toIso8601String());
+                if (context.mounted) Navigator.pop(c);
+              },
+              child: const Text('Yes, Clear All'),
+            ),
+          ],
+        ),
+      );
+    }
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../providers/app_provider.dart';
 import '../../providers/settings_provider.dart';
 import '../../providers/attendance_provider.dart';
 import '../../services/pdf_service.dart';
@@ -60,14 +61,24 @@ class SettingsScreen extends StatelessWidget {
         const SizedBox(height: 16),
 
         _sectionTitle(theme, 'Customization'),
+        Consumer<SettingsProvider>(builder: (ctx, settings, _) {
+          return Column(children: [
+            _switchTile(context, Icons.dark_mode_rounded, 'Dark Mode', 'Toggle dark/light theme', const Color(0xFF6366F1), settings.isDarkMode, (v) => settings.setDarkMode(v)),
+            _tile(context, Icons.view_week_rounded, 'Working Days', '${settings.workingDays.length} days configured', const Color(0xFF0EA5E9),
+              () => _showWorkingDaysDialog(context, settings)),
+            _tile(context, Icons.tune_rounded, 'Attendance Thresholds', 'Danger: ${settings.attendanceDangerThreshold.toInt()}%  Warning: ${settings.attendanceWarningThreshold.toInt()}%', const Color(0xFF8B5CF6),
+              () => _showThresholdDialog(context, settings)),
+          ]);
+        }),
         _tile(context, Icons.event_rounded, 'Manage Holidays', 'Add holidays, exams, and events', const Color(0xFFF59E0B),
           () => Navigator.push(context, MaterialPageRoute(builder: (_) => const HolidayScreen()))),
-        Consumer<SettingsProvider>(builder: (ctx, settings, _) {
-          return _tile(context, Icons.tune_rounded, 'Attendance Thresholds', 'Danger: ${settings.attendanceDangerThreshold.toInt()}%  Warning: ${settings.attendanceWarningThreshold.toInt()}%', const Color(0xFF8B5CF6),
-            () => _showThresholdDialog(context, settings));
-        }),
         _tile(context, Icons.date_range_rounded, 'Semester Dates', 'Set semester start & end dates', const Color(0xFF0EA5E9),
           () => _showSemesterDatesDialog(context)),
+        const SizedBox(height: 16),
+
+        _sectionTitle(theme, 'Data Management'),
+        _tile(context, Icons.delete_forever_rounded, 'Clear All Data', 'Delete all classes, attendance & settings', Colors.red,
+          () => _showClearDataDialog(context)),
         const SizedBox(height: 16),
 
         _sectionTitle(theme, 'About'),
@@ -197,5 +208,75 @@ class SettingsScreen extends StatelessWidget {
       ]),
       actions: [FilledButton(onPressed: () => Navigator.pop(c), child: const Text('Done'))],
     ));
+  }
+
+  void _showWorkingDaysDialog(BuildContext ctx, SettingsProvider settings) {
+    List<String> selected = List.from(settings.workingDays);
+    showDialog(context: ctx, builder: (c) => StatefulBuilder(builder: (c, setState2) => AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: const Text('Working Days'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: AppConstants.allDays.map((day) => CheckboxListTile(
+            title: Text(day),
+            value: selected.contains(day),
+            onChanged: (v) {
+              setState2(() {
+                if (v == true) {
+                  selected.add(day);
+                  // Preserve order based on allDays
+                  selected.sort((a, b) => AppConstants.allDays.indexOf(a).compareTo(AppConstants.allDays.indexOf(b)));
+                } else {
+                  selected.remove(day);
+                }
+              });
+            },
+          )).toList(),
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(c), child: const Text('Cancel')),
+        FilledButton(onPressed: () {
+          if (selected.isEmpty) {
+            ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('Select at least one working day')));
+            return;
+          }
+          settings.setWorkingDays(selected);
+          Navigator.pop(c);
+        }, child: const Text('Save')),
+      ],
+    )));
+  }
+
+  void _showClearDataDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: Colors.red.withAlpha(30), borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 24)),
+            const SizedBox(width: 12),
+            const Text('Clear All Data'),
+          ],
+        ),
+        content: const Text('Are you absolutely sure? This will permanently delete all your classes, attendance records, and custom settings. This cannot be undone.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          FilledButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await Provider.of<AppProvider>(context, listen: false).deleteAllData();
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('All data cleared successfully.')));
+              }
+            },
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Delete Everything', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
   }
 }

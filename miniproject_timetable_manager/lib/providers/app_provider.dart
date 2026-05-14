@@ -161,4 +161,30 @@ class AppProvider with ChangeNotifier {
     if (hours > 0) return '${hours}h';
     return '${mins}m';
   }
+
+  // ── Database Reset ──
+  Future<void> deleteAllData() async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final db = await DatabaseHelperV2.instance.database;
+      await db.delete('classes');
+      await db.delete('attendance');
+      await db.delete('subjects');
+      await db.delete('holidays');
+      await db.delete('day_status');
+      
+      _classes.clear();
+      _weeklySummary.clear();
+      _todayStatus = null;
+      
+      await _notifService.cancelAllV2Notifications();
+    } catch (e) {
+      debugPrint('Error deleting all data: $e');
+    }
+
+    _isLoading = false;
+    notifyListeners();
+  }
 }

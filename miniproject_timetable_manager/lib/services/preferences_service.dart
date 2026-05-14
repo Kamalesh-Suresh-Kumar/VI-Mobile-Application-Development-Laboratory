@@ -63,4 +63,16 @@ class PreferencesService {
       AppConstants.attendanceWarningThreshold;
   Future<void> setAttendanceWarningThreshold(double threshold) =>
       prefs.setDouble(AppConstants.prefAttendanceWarning, threshold);
+
+  // ── Theme ──
+  bool get isDarkMode => prefs.getBool(AppConstants.prefDarkMode) ?? false;
+  Future<void> setDarkMode(bool value) => prefs.setBool(AppConstants.prefDarkMode, value);
+
+  // ── Working Days ──
+  List<String> get workingDays => prefs.getStringList(AppConstants.prefWorkingDays) ?? AppConstants.weekDays;
+  Future<void> setWorkingDays(List<String> days) => prefs.setStringList(AppConstants.prefWorkingDays, days);
+
+  // ── Timetable lifecycle ──
+  String get timetableCreatedAt => prefs.getString(AppConstants.prefTimetableCreated) ?? '';
+  Future<void> setTimetableCreatedAt(String date) => prefs.setString(AppConstants.prefTimetableCreated, date);
 }

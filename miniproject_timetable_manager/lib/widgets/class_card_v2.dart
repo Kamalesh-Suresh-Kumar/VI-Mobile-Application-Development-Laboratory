@@ -29,76 +29,7 @@ class ClassCardV2 extends StatelessWidget {
     final theme = Theme.of(context);
     final typeColor = AppTheme.getTypeColor(classEntry.type);
 
-    return Dismissible(
-      key: Key('classv2_${classEntry.id}'),
-      direction:
-          onDelete != null ? DismissDirection.endToStart : DismissDirection.none,
-      confirmDismiss: (_) async {
-        if (onDelete == null) return false;
-        final result = await showDialog<bool>(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.red.withAlpha(30),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(Icons.delete_outline_rounded,
-                      color: Colors.red, size: 24),
-                ),
-                const SizedBox(width: 12),
-                const Text('Delete Class'),
-              ],
-            ),
-            content: Text(
-              'Are you sure you want to delete "${classEntry.subjectCourse}"? This action cannot be undone.',
-              style: theme.textTheme.bodyMedium,
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(false),
-                child: Text('Cancel',
-                    style: TextStyle(color: theme.colorScheme.onSurface)),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.of(ctx).pop(true),
-                style: FilledButton.styleFrom(backgroundColor: Colors.red),
-                child:
-                    const Text('Delete', style: TextStyle(color: Colors.white)),
-              ),
-            ],
-          ),
-        );
-        return result ?? false;
-      },
-      onDismissed: (_) => onDelete?.call(),
-      background: Container(
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
-        decoration: BoxDecoration(
-          color: Colors.red.shade400,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: const Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.delete_rounded, color: Colors.white, size: 28),
-            SizedBox(height: 4),
-            Text('Delete',
-                style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600)),
-          ],
-        ),
-      ),
-      child: GestureDetector(
+    return GestureDetector(
         onTap: onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 300),
@@ -281,6 +212,49 @@ class ClassCardV2 extends StatelessWidget {
                             ),
                           ),
                         ],
+                        if (onDelete != null) ...[
+                          const SizedBox(width: 8),
+                          InkWell(
+                            onTap: () async {
+                              final result = await showDialog<bool>(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                  title: Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(color: Colors.red.withAlpha(30), borderRadius: BorderRadius.circular(12)),
+                                        child: const Icon(Icons.delete_outline_rounded, color: Colors.red, size: 24),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      const Text('Delete Class'),
+                                    ],
+                                  ),
+                                  content: Text('Are you sure you want to delete "${classEntry.subjectCourse}"? This action cannot be undone.', style: theme.textTheme.bodyMedium),
+                                  actions: [
+                                    TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: Text('Cancel', style: TextStyle(color: theme.colorScheme.onSurface))),
+                                    FilledButton(onPressed: () => Navigator.of(ctx).pop(true), style: FilledButton.styleFrom(backgroundColor: Colors.red), child: const Text('Delete', style: TextStyle(color: Colors.white))),
+                                  ],
+                                ),
+                              );
+                              if (result == true) onDelete?.call();
+                            },
+                            borderRadius: BorderRadius.circular(8),
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: Colors.red.withAlpha(20),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Icon(
+                                Icons.delete_outline_rounded,
+                                size: 18,
+                                color: Colors.red,
+                              ),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
 
@@ -324,7 +298,6 @@ class ClassCardV2 extends StatelessWidget {
               ),
             ),
           ),
-        ),
       ),
     );
   }

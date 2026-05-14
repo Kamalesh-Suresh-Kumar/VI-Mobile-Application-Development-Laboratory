@@ -18,6 +18,9 @@ class SettingsProvider with ChangeNotifier {
   double get attendanceDangerThreshold => _prefs.attendanceDangerThreshold;
   double get attendanceWarningThreshold => _prefs.attendanceWarningThreshold;
   bool get isOnboardingDone => _prefs.isOnboardingDone;
+  bool get isDarkMode => _prefs.isDarkMode;
+  List<String> get workingDays => _prefs.workingDays;
+  String get timetableCreatedAt => _prefs.timetableCreatedAt;
 
   Future<void> setNotificationsEnabled(bool enabled) async {
     await _prefs.setNotificationsEnabled(enabled);
@@ -57,6 +60,21 @@ class SettingsProvider with ChangeNotifier {
 
   Future<void> setOnboardingDone(bool done) async {
     await _prefs.setOnboardingDone(done);
+    notifyListeners();
+  }
+
+  Future<void> setDarkMode(bool isDark) async {
+    await _prefs.setDarkMode(isDark);
+    notifyListeners();
+  }
+
+  Future<void> setWorkingDays(List<String> days) async {
+    await _prefs.setWorkingDays(days);
+    notifyListeners();
+  }
+
+  Future<void> setTimetableCreatedAt(String date) async {
+    await _prefs.setTimetableCreatedAt(date);
     notifyListeners();
   }
 }

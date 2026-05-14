@@ -3,11 +3,14 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../providers/app_provider.dart';
 import '../../providers/attendance_provider.dart';
+import '../../models/attendance_model.dart';
 import '../../widgets/class_card_v2.dart';
 import '../../widgets/weekly_summary.dart';
 import '../../utils/constants.dart';
 import 'subject_list_screen.dart';
 import 'add_edit_class.dart';
+
+import '../../providers/settings_provider.dart';
 
 class TimetableScreen extends StatefulWidget {
   const TimetableScreen({super.key});
@@ -15,35 +18,54 @@ class TimetableScreen extends StatefulWidget {
   State<TimetableScreen> createState() => _TimetableScreenState();
 }
 
-class _TimetableScreenState extends State<TimetableScreen> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-  final _days = AppConstants.weekDays;
+class _TimetableScreenState extends State<TimetableScreen> with TickerProviderStateMixin {
+  TabController? _tabController;
+  List<String> _days = [];
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: _days.length, vsync: this);
-    final today = DateTime.now().weekday - 1;
-    if (today >= 0 && today < _days.length) _tabController.index = today;
+    Future.microtask(() {
+      final settings = Provider.of<SettingsProvider>(context, listen: false);
+      _updateTabs(settings.workingDays);
+    });
+  }
+
+  void _updateTabs(List<String> workingDays) {
+    if (_days.length == workingDays.length && _days.every((d) => workingDays.contains(d))) return;
+    setState(() {
+      _days = workingDays;
+      _tabController?.dispose();
+      _tabController = TabController(length: _days.length, vsync: this);
+      final today = DateTime.now().weekday - 1; // 0 for Monday
+      final dayName = AppConstants.allDays.length > today ? AppConstants.allDays[today] : '';
+      int idx = _days.indexOf(dayName);
+      if (idx != -1) _tabController!.index = idx;
+    });
   }
 
   @override
-  void dispose() { _tabController.dispose(); super.dispose(); }
+  void dispose() { _tabController?.dispose(); super.dispose(); }
 
   void _markAttendance(BuildContext ctx, int classId) async {
     final date = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    final result = await showDialog<bool>(context: ctx, builder: (c) => AlertDialog(
+    final result = await showDialog<AttendanceStatus>(context: ctx, builder: (c) => AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       title: const Text('Mark Attendance'),
-      content: const Text('Did you attend this class?'),
+      content: const Text('What was your attendance status for this class?'),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Absent', style: TextStyle(color: Colors.red))),
-        FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Present')),
+        TextButton(onPressed: () => Navigator.pop(c, AttendanceStatus.missed), child: const Text('Absent', style: TextStyle(color: Colors.red))),
+        TextButton(onPressed: () => Navigator.pop(c, AttendanceStatus.od), child: const Text('OD (On Duty)', style: TextStyle(color: Colors.blue))),
+        FilledButton(onPressed: () => Navigator.pop(c, AttendanceStatus.attended), child: const Text('Present')),
       ],
     ));
     if (result != null && ctx.mounted) {
-      await Provider.of<AttendanceProvider>(ctx, listen: false).markAttendance(classId: classId, date: date, attended: result);
-      if (ctx.mounted) ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(result ? 'Marked present ✅' : 'Marked absent ❌'), behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), margin: const EdgeInsets.all(16)));
+      await Provider.of<AttendanceProvider>(ctx, listen: false).markAttendance(classId: classId, date: date, status: result);
+      String msg = 'Marked absent ❌';
+      if (result == AttendanceStatus.attended) msg = 'Marked present ✅';
+      else if (result == AttendanceStatus.od) msg = 'Marked On Duty (OD) 🛡️';
+      
+      if (ctx.mounted) ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(msg), behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), margin: const EdgeInsets.all(16)));
     }
   }
 
@@ -72,24 +94,30 @@ class _TimetableScreenState extends State<TimetableScreen> with SingleTickerProv
                   })),
               Container(margin: const EdgeInsets.only(right: 12, top: 8), decoration: BoxDecoration(color: theme.colorScheme.primaryContainer.withAlpha(60), borderRadius: BorderRadius.circular(14)),
                 child: IconButton(icon: Icon(Icons.today_rounded, color: theme.colorScheme.primary), tooltip: 'Go to today',
-                  onPressed: () { final today = DateTime.now().weekday - 1; if (today >= 0 && today < _days.length) _tabController.animateTo(today); })),
+                  onPressed: () { final todayName = AppConstants.allDays[DateTime.now().weekday - 1]; int idx = _days.indexOf(todayName); if (idx != -1) _tabController?.animateTo(idx); })),
             ],
             bottom: PreferredSize(preferredSize: const Size.fromHeight(52), child: Container(
               decoration: BoxDecoration(border: Border(bottom: BorderSide(color: theme.colorScheme.outlineVariant.withAlpha(60)))),
-              child: TabBar(controller: _tabController, isScrollable: true, tabAlignment: TabAlignment.start,
-                labelColor: theme.colorScheme.primary, unselectedLabelColor: theme.colorScheme.onSurface.withAlpha(150),
-                labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
-                unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
-                indicatorSize: TabBarIndicatorSize.label,
-                indicator: BoxDecoration(border: Border(bottom: BorderSide(color: theme.colorScheme.primary, width: 3))),
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                tabs: _days.map((day) {
-                  final isToday = day == todayName;
-                  return Tab(child: Row(mainAxisSize: MainAxisSize.min, children: [
-                    Text(day.substring(0, 3)),
-                    if (isToday) ...[const SizedBox(width: 6), Container(width: 7, height: 7, decoration: BoxDecoration(color: theme.colorScheme.primary, shape: BoxShape.circle))],
-                  ]));
-                }).toList(),
+              child: Consumer<SettingsProvider>(
+                builder: (ctx, settings, _) {
+                  _updateTabs(settings.workingDays);
+                  if (_tabController == null || _days.isEmpty) return const SizedBox(height: 52);
+                  return TabBar(controller: _tabController, isScrollable: true, tabAlignment: TabAlignment.start,
+                    labelColor: theme.colorScheme.primary, unselectedLabelColor: theme.colorScheme.onSurface.withAlpha(150),
+                    labelStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                    unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
+                    indicatorSize: TabBarIndicatorSize.label,
+                    indicator: BoxDecoration(border: Border(bottom: BorderSide(color: theme.colorScheme.primary, width: 3))),
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    tabs: _days.map((day) {
+                      final isToday = day == todayName;
+                      return Tab(child: Row(mainAxisSize: MainAxisSize.min, children: [
+                        Text(day.substring(0, 3)),
+                        if (isToday) ...[const SizedBox(width: 6), Container(width: 7, height: 7, decoration: BoxDecoration(color: theme.colorScheme.primary, shape: BoxShape.circle))],
+                      ]));
+                    }).toList(),
+                  );
+                },
               ),
             )),
           ),
@@ -99,7 +127,7 @@ class _TimetableScreenState extends State<TimetableScreen> with SingleTickerProv
           return Column(children: [
             Padding(padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
               child: WeeklySummary(totalClasses: provider.totalWeeklyClasses, totalHours: provider.totalWeeklyHours, dayCounts: provider.weeklySummary)),
-            Expanded(child: TabBarView(controller: _tabController, children: _days.map((day) {
+            Expanded(child: _tabController == null || _days.isEmpty ? const Center(child: Text('No working days configured')) : TabBarView(controller: _tabController, children: _days.map((day) {
               final classes = provider.getClassesByDay(day);
               if (classes.isEmpty) return _buildEmptyState(context, day);
               return RefreshIndicator(onRefresh: () => provider.loadAll(),

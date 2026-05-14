@@ -125,6 +125,13 @@ class AttendanceIndicator extends StatelessWidget {
                   attendance.missedClasses.toString(),
                   AppTheme.attendanceDanger,
                 ),
+                const SizedBox(width: 8),
+                _buildStatChip(
+                  context,
+                  'OD',
+                  attendance.odClasses.toString(),
+                  Colors.blue,
+                ),
               ],
             ),
           ],

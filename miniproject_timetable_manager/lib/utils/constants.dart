@@ -59,4 +59,7 @@ class AppConstants {
   static const String prefSemesterEnd = 'semester_end';
   static const String prefAttendanceDanger = 'attendance_danger';
   static const String prefAttendanceWarning = 'attendance_warning';
+  static const String prefDarkMode = 'dark_mode';
+  static const String prefWorkingDays = 'working_days';
+  static const String prefTimetableCreated = 'timetable_created';
 }

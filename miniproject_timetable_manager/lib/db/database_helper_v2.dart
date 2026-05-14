@@ -278,7 +278,8 @@ class DatabaseHelperV2 {
       final result = await db.rawQuery('''
         SELECT 
           COUNT(*) as total,
-          SUM(CASE WHEN a.attended = 1 THEN 1 ELSE 0 END) as attended
+          SUM(CASE WHEN a.attended = 1 THEN 1 ELSE 0 END) as attended,
+          SUM(CASE WHEN a.attended = 2 THEN 1 ELSE 0 END) as od
         FROM attendance a
         INNER JOIN classes c ON a.classId = c.id
         WHERE c.subjectId = ?
@@ -286,6 +287,7 @@ class DatabaseHelperV2 {
 
       final total = (result.first['total'] as int?) ?? 0;
       final attended = (result.first['attended'] as int?) ?? 0;
+      final od = (result.first['od'] as int?) ?? 0;
 
       summaries.add(SubjectAttendance(
         subjectId: subject.id!,
@@ -294,6 +296,7 @@ class DatabaseHelperV2 {
         faculty: subject.faculty,
         totalClasses: total,
         attendedClasses: attended,
+        odClasses: od,
       ));
     }
 

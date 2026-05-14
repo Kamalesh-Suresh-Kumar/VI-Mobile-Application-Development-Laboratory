@@ -5,6 +5,7 @@ import '../../models/class_entry_model.dart';
 import '../../models/subject_model.dart';
 import '../../providers/app_provider.dart';
 import '../../providers/subject_provider.dart';
+import '../../providers/settings_provider.dart';
 import '../../utils/constants.dart';
 import '../../utils/theme.dart';
 
@@ -52,7 +53,21 @@ class _AddEditClassScreenState extends State<AddEditClassScreen> {
   void dispose() { _locationCtrl.dispose(); _durationCtrl.dispose(); super.dispose(); }
 
   TimeOfDay _parseTime(String t) {
-    try { final dt = DateFormat.jm().parse(t); return TimeOfDay.fromDateTime(dt); } catch (_) { return const TimeOfDay(hour: 9, minute: 0); }
+    if (t.isEmpty) return const TimeOfDay(hour: 9, minute: 0);
+    try { return TimeOfDay.fromDateTime(DateFormat('hh:mm a').parseLoose(t)); } catch (_) {}
+    try { return TimeOfDay.fromDateTime(DateFormat.jm().parseLoose(t)); } catch (_) {}
+    try { return TimeOfDay.fromDateTime(DateFormat('HH:mm').parse(t)); } catch (_) {}
+    try {
+      final parts = t.toLowerCase().split(RegExp(r'[:.\s]+'));
+      if (parts.length >= 2) {
+        int h = int.parse(parts[0]);
+        int m = int.parse(parts[1].replaceAll(RegExp(r'[^0-9]'), ''));
+        if (t.toLowerCase().contains('pm') && h < 12) h += 12;
+        if (t.toLowerCase().contains('am') && h == 12) h = 0;
+        return TimeOfDay(hour: h, minute: m);
+      }
+    } catch (_) {}
+    return const TimeOfDay(hour: 9, minute: 0);
   }
 
   String _formatTime(TimeOfDay t) {
@@ -83,9 +98,25 @@ class _AddEditClassScreenState extends State<AddEditClassScreen> {
     final e = _endTime.hour * 60 + _endTime.minute;
     if (e <= s) { ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('End time must be after start'), behavior: SnackBarBehavior.floating)); return; }
 
+    final provider = Provider.of<AppProvider>(context, listen: false);
+    
+    // Overlap check
+    final existingClasses = provider.getClassesByDay(_selectedDay);
+    for (final c in existingClasses) {
+      if (isEditing && c.id == widget.classEntry?.id) continue;
+      // Overlap condition: A overlaps B if (A.start < B.end) && (A.end > B.start)
+      if (s < c.endMinutes && e > c.startMinutes) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('Overlaps with existing class (${c.subjectCode ?? "Class"})'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ));
+        return;
+      }
+    }
+
     setState(() => _saving = true);
     try {
-      final provider = Provider.of<AppProvider>(context, listen: false);
       final entry = ClassEntry(
         id: widget.classEntry?.id, subjectId: _selectedSubject!.id!, day: _selectedDay,
         startTime: _formatTime(_startTime), endTime: _formatTime(_endTime), type: _selectedType,
@@ -119,14 +150,20 @@ class _AddEditClassScreenState extends State<AddEditClassScreen> {
           const SizedBox(height: 20),
 
           _section(theme, 'Schedule', Icons.calendar_month_rounded), const SizedBox(height: 12),
-          DropdownButtonFormField<String>(
-            initialValue: _selectedDay,
-            decoration: InputDecoration(labelText: 'Day', prefixIcon: const Icon(Icons.calendar_today_rounded, size: 20),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)), filled: true, fillColor: theme.colorScheme.surfaceContainerHighest.withAlpha(80)),
-            borderRadius: BorderRadius.circular(14),
-            items: AppConstants.weekDays.map((d) => DropdownMenuItem(value: d, child: Text(d))).toList(),
-            onChanged: (v) => setState(() => _selectedDay = v!),
-          ),
+          Consumer<SettingsProvider>(builder: (ctx, settings, _) {
+            List<String> availableDays = List.from(settings.workingDays);
+            if (!availableDays.contains(_selectedDay)) {
+              availableDays.add(_selectedDay); // Ensure initial value exists in list to prevent dropdown crash
+            }
+            return DropdownButtonFormField<String>(
+              initialValue: _selectedDay,
+              decoration: InputDecoration(labelText: 'Day', prefixIcon: const Icon(Icons.calendar_today_rounded, size: 20),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)), filled: true, fillColor: theme.colorScheme.surfaceContainerHighest.withAlpha(80)),
+              borderRadius: BorderRadius.circular(14),
+              items: availableDays.map((d) => DropdownMenuItem(value: d, child: Text(d))).toList(),
+              onChanged: (v) => setState(() => _selectedDay = v!),
+            );
+          }),
           const SizedBox(height: 14),
           Row(children: [
             Expanded(child: _timePicker(context, 'Start', _startTime, () => _pickTime(true), Icons.play_circle_outline_rounded)),

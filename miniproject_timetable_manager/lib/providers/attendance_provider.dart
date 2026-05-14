@@ -33,7 +33,7 @@ class AttendanceProvider with ChangeNotifier {
   Future<void> markAttendance({
     required int classId,
     required String date,
-    required bool attended,
+    required AttendanceStatus status,
   }) async {
     try {
       // Check if record exists
@@ -42,13 +42,13 @@ class AttendanceProvider with ChangeNotifier {
 
       if (existing != null) {
         await DatabaseHelperV2.instance
-            .updateAttendance(existing.copyWith(attended: attended));
+            .updateAttendance(existing.copyWith(status: status));
       } else {
         await DatabaseHelperV2.instance.insertAttendance(
           AttendanceRecord(
             classId: classId,
             date: date,
-            attended: attended,
+            status: status,
           ),
         );
       }

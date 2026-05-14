@@ -3,17 +3,19 @@
 // Attendance record model
 // ──────────────────────────────────────────────
 
+enum AttendanceStatus { missed, attended, od }
+
 class AttendanceRecord {
   final int? id;
   final int classId;
   final String date; // ISO 8601 date string (yyyy-MM-dd)
-  final bool attended;
+  final AttendanceStatus status;
 
   AttendanceRecord({
     this.id,
     required this.classId,
     required this.date,
-    required this.attended,
+    required this.status,
   });
 
   Map<String, dynamic> toMap() {
@@ -21,16 +23,19 @@ class AttendanceRecord {
       'id': id,
       'classId': classId,
       'date': date,
-      'attended': attended ? 1 : 0,
+      'attended': status.index,
     };
   }
 
   factory AttendanceRecord.fromMap(Map<String, dynamic> map) {
+    int statusIndex = map['attended'] ?? 0;
+    // Fallback if out of bounds
+    if (statusIndex < 0 || statusIndex >= AttendanceStatus.values.length) statusIndex = 0;
     return AttendanceRecord(
       id: map['id'],
       classId: map['classId'] ?? 0,
       date: map['date'] ?? '',
-      attended: (map['attended'] ?? 0) == 1,
+      status: AttendanceStatus.values[statusIndex],
     );
   }
 
@@ -38,19 +43,19 @@ class AttendanceRecord {
     int? id,
     int? classId,
     String? date,
-    bool? attended,
+    AttendanceStatus? status,
   }) {
     return AttendanceRecord(
       id: id ?? this.id,
       classId: classId ?? this.classId,
       date: date ?? this.date,
-      attended: attended ?? this.attended,
+      status: status ?? this.status,
     );
   }
 
   @override
   String toString() =>
-      'AttendanceRecord(id: $id, classId: $classId, date: $date, attended: $attended)';
+      'AttendanceRecord(id: $id, classId: $classId, date: $date, status: $status)';
 }
 
 /// Aggregated attendance data for a subject
@@ -61,6 +66,7 @@ class SubjectAttendance {
   final String faculty;
   final int totalClasses;
   final int attendedClasses;
+  final int odClasses;
 
   SubjectAttendance({
     required this.subjectId,
@@ -69,10 +75,11 @@ class SubjectAttendance {
     required this.faculty,
     required this.totalClasses,
     required this.attendedClasses,
+    required this.odClasses,
   });
 
   double get percentage =>
-      totalClasses == 0 ? 0.0 : (attendedClasses / totalClasses) * 100;
+      totalClasses == 0 ? 0.0 : ((attendedClasses + odClasses) / totalClasses) * 100;
 
-  int get missedClasses => totalClasses - attendedClasses;
+  int get missedClasses => totalClasses - attendedClasses - odClasses;
 }

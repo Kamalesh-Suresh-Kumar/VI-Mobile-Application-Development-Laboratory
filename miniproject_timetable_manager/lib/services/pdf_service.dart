@@ -14,6 +14,7 @@ import '../models/class_entry_model.dart';
 import '../models/subject_model.dart';
 import '../db/database_helper_v2.dart';
 import '../utils/constants.dart';
+import 'preferences_service.dart';
 
 class PdfService {
   static final PdfService _instance = PdfService._internal();
@@ -116,7 +117,7 @@ class PdfService {
   }
 
   pw.Widget _buildTimetableGrid(List<ClassEntry> allClasses) {
-    final days = AppConstants.allDays; // Mon-Sun
+    final days = PreferencesService().workingDays; // Only configured working days
 
     // Group classes by day
     final Map<String, List<ClassEntry>> classesByDay = {};
@@ -164,7 +165,7 @@ class PdfService {
 
       // Check if this day is a holiday (no classes at all)
       final isHolidayDay = dayClasses.isEmpty &&
-          (day == 'Sunday' || day == 'Monday');
+          (day == 'Sunday' || day == 'Saturday');
 
       if (isHolidayDay) {
         // Holiday row — merged style
@@ -417,7 +418,20 @@ class PdfService {
   Future<String> savePdfLocally() async {
     final doc = await generateTimetablePdf();
     final bytes = await doc.save();
-    final dir = await getApplicationDocumentsDirectory();
+    
+    Directory? dir;
+    if (Platform.isAndroid) {
+      // Try to save directly to public Downloads folder on Android
+      dir = Directory('/storage/emulated/0/Download');
+      if (!await dir.exists()) {
+        dir = await getExternalStorageDirectory();
+      }
+    } else {
+      dir = await getDownloadsDirectory();
+    }
+    
+    dir ??= await getApplicationDocumentsDirectory();
+
     final filename = 'SchedIQ_Timetable_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
     final file = File(p.join(dir.path, filename));
     await file.writeAsBytes(bytes);
