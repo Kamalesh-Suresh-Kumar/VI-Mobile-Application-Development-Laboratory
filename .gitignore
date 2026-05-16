@@ -1,10 +1,79 @@
+# =====================================
+# ANDROID / KOTLIN / GRADLE
+# =====================================
+
+# Gradle
 .gradle/
+build/
+*/build/
+
+# Local config
 local.properties
-/.idea
-/build
-*.iml
+
+# Kotlin
+.kotlin/
+
+# Android Studio generated
 captures/
 .externalNativeBuild/
 .cxx/
-Output/
-*.zip
+
+# APK / AAB
+*.apk
+*.aab
+
+# Generated files
+google-services.json
+
+# =====================================
+# IDE FILES
+# =====================================
+
+.idea/
+*.iml
+
+# VS Code
+.vscode/
+
+# =====================================
+# LOG FILES
+# =====================================
+
+*.log
+
+# =====================================
+# OS FILES
+# =====================================
+
+.DS_Store
+Thumbs.db
+
+# =====================================
+# TEMP FILES
+# =====================================
+
+*.tmp
+*.temp
+*.swp
+*~
+
+# =====================================
+# JAVA / KOTLIN CACHE
+# =====================================
+
+*.class
+
+# =====================================
+# SECRETS / KEYS
+# =====================================
+
+*.jks
+*.keystore
+key.properties
+
+# =====================================
+# SQLITE
+# =====================================
+
+*.db
+*.sqlite

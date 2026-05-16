@@ -1,12 +1,12 @@
-# 📱 VI – Mobile Application Development Laboratory
+# VI – Mobile Application Development Laboratory
 
-## 📌 Overview
+## Overview
 
 This repository contains a collection of Android-based experiments and a mini project developed as part of the **Mobile Application Development Laboratory** course. The objective is to gain hands-on experience in building mobile applications using Android Studio and modern development practices.
 
 ---
 
-## 🧰 Tech Stack
+## Tech Stack
 
 - **Language:** Flutter / Kotlin  
 - **IDE:** Android Studio  
@@ -16,53 +16,53 @@ This repository contains a collection of Android-based experiments and a mini pr
 
 ---
 
-## 📂 Repository Structure
+## Repository Structure
 
-├──📁 .git/<br/>
+├── .git/<br/>
 │<br/>
-├──📁 .idea/<br>
+├── .idea/<br>
 │<br/>
-├──📁 EX - 01 Text style changer/<br>
+├── EX - 01 Text style changer/<br>
 │<br/>
-├──📁 EX - 02 Calculator/<br>
+├── EX - 02 Calculator/<br>
 │<br/>
-├──📁 EX - 03 Shapes/<br>
+├── EX - 03 Shapes/<br>
 │<br/>
-├──📁 EX - 04 Student fragment/<br>
+├── EX - 04 Student fragment/<br>
 │<br/>
-├──📁 EX - 05 Student Database/<br>
+├── EX - 05 Student Database/<br>
 │<br/>
-├──📁 EX - 06 Login/<br>
+├── EX - 06 Login/<br>
 │<br/>
-├──📁 EX - 07 SD card/<br>
+├── EX - 07 SD card/<br>
 │<br/>
-├──📁 EX - 08 Alert Box/<br>
+├── EX - 08 Alert Box/<br>
 │<br/>
-├──📁 EX - 09 Alarm/<br>
+├── EX - 09 Alarm/<br>
 │<br/>
-├──📁 EX - 10 Telephone services/<br>
+├── EX - 10 Telephone services/<br>
 │<br/>
-├──📁 EX - 11 Send SMS/<br>
+├── EX - 11 Send SMS/<br>
 │<br/>
-├──📁 EX - 12 Send Mail/<br>
+├── EX - 12 Send Mail/<br>
 │<br/>
-├──📁 EX - 13 Text - Speech/<br>
+├── EX - 13 Text - Speech/<br>
 │<br/>
-├──📁 EX - 14 Speech - Text/<br>
+├── EX - 14 Speech - Text/<br>
 │<br/>
-├──📁 EX - 15 Image Capture/<br>
+├── EX - 15 Image Capture/<br>
 │<br/>
-├──📁 miniproject_timetable_manager/<br>
+├── miniproject_timetable_manager/<br>
 │<br/>
-├──📁 Output/<br>
+├── Output/<br>
 │<br/>
-├──📄 .gitignore<br>
+├── .gitignore<br>
 │<br/>
-└──📄 README.md<br>
+└── README.md<br>
 
 ---
 
-## 🧪 Laboratory Experiments
+## Laboratory Experiments
 
 | Ex No | Experiment Name | Description / Use |
 |------|----------------|------------------|
@@ -84,15 +84,15 @@ This repository contains a collection of Android-based experiments and a mini pr
 
 ---
 
-## 🚀 Mini Project – Timetable Manager
+## Mini Project – SchedIQ: Smart Timetable Manager
 
-### 📌 Project Overview
+### Project Overview
 
 The **Timetable Manager** is a practical Android application designed to help users manage daily or weekly schedules efficiently. It demonstrates real-world mobile app development by integrating UI, data storage, and user interaction into a single cohesive system.
 
 ---
 
-### 🎯 Objectives
+### Objectives
 
 - Digitize timetable management
 - Provide structured schedule organization
@@ -101,7 +101,7 @@ The **Timetable Manager** is a practical Android application designed to help us
 
 ---
 
-### 🏗️ Architecture
+### Architecture
 
 The project follows a structured layered approach:
 
@@ -111,7 +111,7 @@ The project follows a structured layered approach:
 
 ---
 
-### ⚙️ Core Features
+### Core Features
 
 - Add, update, and delete timetable entries
 - Organized subject/day/time management
@@ -121,7 +121,7 @@ The project follows a structured layered approach:
 
 ---
 
-### 🔍 Functional Flow
+### Functional Flow
 
 1. User opens the app
 2. Inputs timetable details (subject, time, day)
@@ -131,7 +131,7 @@ The project follows a structured layered approach:
 
 ---
 
-### 📊 Key Concepts Applied
+### Key Concepts Applied
 
 - Activity Lifecycle Management
 - Intents and Navigation
@@ -141,7 +141,7 @@ The project follows a structured layered approach:
 
 ---
 
-### 🧠 Engineering Perspective
+### Engineering Perspective
 
 - **Scalability:** Can be extended to multi-user or cloud-based system
 - **Maintainability:** Modular and structured code design
@@ -150,7 +150,7 @@ The project follows a structured layered approach:
 
 ---
 
-### 🚧 Possible Enhancements
+### Possible Enhancements
 
 - Firebase / Cloud sync
 - User authentication system
@@ -160,7 +160,7 @@ The project follows a structured layered approach:
 
 ---
 
-## ▶️ How to Run
+## How to Run
 
 1. Clone the repository:
    run:
@@ -173,7 +173,7 @@ The project follows a structured layered approach:
 
 ---
 
-## 📈 Learning Outcomes
+## Learning Outcomes
 Strong understanding of Android fundamentals
 Practical exposure to real-world app development
 Experience with UI, storage, and system services
@@ -181,16 +181,12 @@ Improved debugging and development workflow
 
 ---
 
-## 📜 License
-This project is developed for academic purposes.
-
----
-
-## 👨‍💻 Author
-Kamalesh Suresh Kumar
-
----
-
-## 💡 Final Note
+## Final Note
 
 This repository represents a complete learning pipeline—from basic UI experiments to a functional application. With further enhancements, the mini project can be scaled into a production-ready mobile solution.
+
+---
+
+## Author
+- Kamalesh S P[https://github.com/Kamalesh-Suresh-Kumar]
+- Monesh G J[https://github.com/M]
