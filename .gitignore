@@ -18,10 +18,6 @@ captures/
 .externalNativeBuild/
 .cxx/
 
-# APK / AAB
-*.apk
-*.aab
-
 # Generated files
 google-services.json
 
